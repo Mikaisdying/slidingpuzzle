@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link href="//netdna.bootstrapcdn.com/bootstrap/3.0.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=WindSong&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Raleway&display=swap" rel="stylesheet">
+    <script src="env.js"></script>
+<head>
+    <style>
+        .puzzle {
+            display: grid;
+            width: 600px;
+            height: 600px;
+        }
+
+        .origin {
+            display: grid;
+            width: 600px;
+            height: 600px;
+        }
+
+        .puzzle-item {
+            width: 200px;
+            height: 200px;
+            border: 1px solid black;
+            box-sizing: border-box;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .menu {
+            display: flex;
+            justify-content: center;
+            margin-top: 50px;
+        }
+
+        #game {
+            display: none;
+            margin-top: 20px;
+            padding: 20px;
+        }
+
+        .game-container {
+            display: flex;
+            justify-content: space-evenly;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="navbar-content">
+            <div class="navbar-right">
+                <button><i class="fas fa-question-circle glowing-txt"></i></button>
+                <button><div id="soundIcon" onclick="toggleSound()">
+                    <i id="soundIconIcon" class="fas fa-volume-up glowing-txt"></i>
+                  </div>
+                <audio id="myAudio" src="sound-file.mp3" loop></audio></button>
+            </div>
+        </div>
+        
+    </nav>
+
+    
+    <div class="container" id="menu">
+        <div class="logo shadow ">
+            <div class="shadow glowing-txt">
+                Sliding <br> </div>
+            <div class="pink shadow"> Pu<span class="faulty-letter">zz</span>le </div>
+        </div>
+        <div id="warning-message">
+            Sorry to say that we haven't develope this type of size. Please set it between 3-5.
+            <i id="close-button" class="fas fa-check"></i>
+        </div>
+        <button class="menu-button glowing-btn shadow" onclick="toggleFileInput()"><span class='glowing-txt'>PLAY</span></button>
+        <div class="menu-button slanted">
+            <button id="challengeButton" class="glowing-btn" onclick="setMode('CHALLENGE'); changecolor(this);"><span class='glowing-txt'>Challenge</span></button>
+            <button id="zenButton" class="not-choose-this" onclick="setMode('ZEN'); changeColor(this);"><span class='zen-text'>Zen</span></button>
+          </div>
+        <div class="menu-button button-container">
+            <div class="arrow-left">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+            <button class="level-button active glowing-btn" onclick="setLevelButton(0)"><span class='glowing-txt'>Easy</span></button>
+            <button class="level-button glowing-btn" onclick="setLevelButton(1)"><span class='glowing-txt'>Medium</span></button>
+            <button class="level-button glowing-btn" onclick="setLevelButton(2)"><span class='glowing-txt'>Hard</span></button>
+            <div class="arrow-right">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+        <div class="menu-button sizing">
+        <span class="glowing-txt"> Pu<span class='faulty-letter'>zz</span>le siz<span class='faulty-letter'>e</span></span>
+        <input class="glowing-btn not-hover glowing-txt" type="number" id="size" value="3" min="3">
+        
+        </div>
+    </div>
+
+    <div id="imageOverlay" onclick="location.reload();" class="imageOverlay"></div>
+
+    <div class="file" id="fileContainer">
+        <label for="file" class="drop-container" id="dropcontainer">
+            <span class="drop-title">Drop files here</span>
+            or
+            <input type="file" id="imageLoader" onchange="hideFileInput(); showGame();" name="imageLoader" accept="image/*" required>
+          </label>
+    </div>
+
+    <div id="game">
+
+        <div class="playfield">
+            <div class="game-container">
+                <div class="puzzle" id="puzzle"></div>
+                
+            <div id="sidemenu">
+                <div class="menu-item">
+                    <span class="menu-label">- Time -</span>
+                    <span class="menu-label count" id="timeCount">00:00</span>
+                </div>
+                <div class="menu-item move">
+                    <span class="menu-label">- Move -</span>
+                    <span class="menu-label count" id="moveCount">0</span>
+                </div>
+                <div class="menu-item move">
+                    <span class="menu-label">- Allow hint -</span>
+                    <span class="menu-label count" id="allowHint">0</span>
+                </div>
+                <div class="menu-item">
+                    <span class="menu-label">- Move per hint -</span>
+                    <span class="menu-label count" id="eachHintMove">0</span>
+                </div>
+                
+                <div class="menu-item">
+                    <span id="difficulty" class="city-night">CHALLENGE</br></span>
+                    <span id="difficultyOverlay" class="city-night">- Easy -</span>
+                </div>
+                <div class="menu-item">
+                    <button id="hintButton" onclick="onClickHint()"><i class="menu-icon fas fa-exclamation glowing-txt" id="hintButtonIcon" title="Click to have a hint!"></i></button>
+                    <button class="homeButton"><i class="menu-icon fas fa-home glowing-txt"  title="Click to come back home!"></i></button>
+                    <button id="giveupButton" onclick="onClickGameOver()"><i class="menu-icon fa fa-flag glowing-txt" title="You loser!"></i></button>
+                </div>
+            </div>
+            <div class="puzzle" id="origin"></div>
+            </div>
+
+            <div id="winNotice">
+                <div class="result">
+                    <h2 class="glowing-txt result-item">Congratulations!</h2>
+                    <p class="result-item">You've won the game!</p>
+                    <p class="result-item move">Move left: <span id="moveLeft">0</span></p>
+                    <p class="result-item">Time: <span id="timePass">0 seconds</span></p>
+                    <button class="homeButton"><i class="result-item fas fa-home glowing-txt"></i></button>
+                </div>
+            </div>
+
+            <div id="lostNotice">
+                <div class="result">
+                    <h2 class="glowing-txt result-item">OOPSIE!</h2>
+                    <p class="result-item">You can't even solve this game for kid!</p>
+                    <p class="result-item">Get defeated after <span id="timeLost">0 seconds</span></p>
+                    <button class="homeButton"><i class="result-item fas fa-home glowing-txt"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="loadingModal" class="modal">
+        <div class="modal-content">
+          <span>L</span>
+          <span>O</span>
+          <span>A</span>
+          <span>D</span>
+          <span>I</span>
+          <span>N</span>
+          <span>G</span>
+        </div>
+      </div>
+      
+
+    <script src="puzzle-solve.js"></script>
+    <script>
+        let gameSize = null;
+        let level = "EASY";
+        let moveLimit = 0;
+        let allowHint = 0;
+        let eachHintMove = 5;
+        let currentMove = 0;
+        let defaultMatrix = [];
+        let currentMatrix = [];
+        let emptyPos = 0;
+        let currentMode = CHALLENGE_MODE;
+        let gameOver = false;
+
+        document.getElementById('imageLoader').addEventListener('change', handleImage, false);
+        
+        function toggleFileInput() {
+            var fileContainer = document.getElementById('fileContainer');
+            fileContainer.style.display = 'block';
+
+            var imageOverlay = document.getElementById('imageOverlay');
+            imageOverlay.style.display = 'block';
+        }
+
+    function hideFileInput() {
+            var fileContainer = document.getElementById('fileContainer');
+            fileContainer.style.display = 'none';
+
+            var imageOverlay = document.getElementById('imageOverlay');
+            imageOverlay.style.display = 'none';
+        }
+
+        function showGame() {
+            gameSize = parseInt(document.getElementById("size").value);
+            
+            const game = document.getElementById("game");
+            const menu = document.getElementById("menu");
+            game.style.display = "block";
+            menu.style.display = "none";
+
+            const puzzle = document.querySelector('#puzzle');
+            const origin = document.querySelector('#origin');
+            const width = puzzle.offsetWidth;
+
+            puzzle.style.gridTemplateColumns = `repeat(${gameSize}, ${width / gameSize}px)`;
+            puzzle.style.gridTemplateRows = `repeat(${gameSize}, ${width / gameSize}px)`;
+            origin.style.gridTemplateColumns = `repeat(${gameSize}, ${width / gameSize}px)`;
+            origin.style.gridTemplateRows = `repeat(${gameSize}, ${width / gameSize}px)`;
+
+            startTimer();
+        }
+
+        function getItemNumber(x) {
+            res = null;
+            x.classList.forEach(function (item) {
+                if (item.startsWith("item-number-")) {
+                    res = item.split("-")[2];
+                }
+            })
+            return res
+        }
+
+        function swapItem(x, y) {
+            let tempImage = x.style.backgroundImage;
+            let tempPosition = x.style.backgroundPosition;
+
+            let xItemNumber = getItemNumber(x)
+            let yItemNumber = getItemNumber(y)
+
+            x.style.backgroundImage = y.style.backgroundImage;
+            x.style.backgroundPosition = y.style.backgroundPosition;
+            x.classList.remove("item-number-" + xItemNumber)
+            x.classList.add("item-number-" + yItemNumber)
+
+            y.style.backgroundImage = tempImage;
+            y.style.backgroundPosition = tempPosition;
+            y.classList.remove("item-number-" + yItemNumber)
+            y.classList.add("item-number-" + xItemNumber)
+
+            if (x.classList.contains("empty-item")) {
+                x.classList.remove("empty-item")
+                y.style.backgroundImage = null;
+                y.classList.add("empty-item")
+            }
+            else if (y.classList.contains("empty-item")) {
+                y.classList.remove("empty-item")
+                x.style.backgroundImage = null;
+                x.classList.add("empty-item")
+            }
+        }
+
+        function copyItem(x, y) {
+            let xItemNumber = getItemNumber(x)
+            let yItemNumber = getItemNumber(y)
+            y.style.backgroundImage = x.style.backgroundImage; 
+            y.style.backgroundPosition = x.style.backgroundPosition;
+            y.classList.remove("item-number-" + yItemNumber)
+            y.classList.add("item-number-" + xItemNumber)
+
+            if(x.classList.contains("empty-item")) {
+                y.style.backgroundImage = null;
+                y.classList.add("empty-item")
+            }
+        }
+
+        function countInversions(puzzle) {
+            let emptyTile = puzzle.length - 1;
+            let numberOfInversion = 0;
+            for (let i = 0; i < puzzle.length; i++) {
+                if (puzzle[i] === emptyTile)
+                    continue;
+
+                for (let j = i+1; j < puzzle.length; j++) {
+                    if ((puzzle[j] < puzzle[i]) && (puzzle[j] !== emptyTile)) {
+                        numberOfInversion++;
+                    }
+                }
+            }
+            return numberOfInversion;
+        }
+
+        function getRowNumberFromBelow(emptyIndex) {
+            let row = Math.floor(emptyIndex / gameSize) + 1;
+            return gameSize - row;
+        }
+
+        function getEmptyIndex(puzzle) {
+            let emptyIndex = null;
+            for (let i = 0; i < puzzle.length; i++) {
+                if (puzzle[i] == puzzle.length - 1) {
+                    emptyIndex = i;
+                    break;
+                }
+            }
+            return emptyIndex;
+        }
+
+        function isSolvable(puzzle) {
+            let numberOfInversion = countInversions(puzzle);
+            let emptyIndex = getEmptyIndex(puzzle);
+            
+            console.log("puzzle: " + puzzle);
+            console.log("number of inversion: " + numberOfInversion);
+            console.log("empty index: " + emptyIndex);
+            
+
+            if (gameSize % 2 !== 0)
+                return numberOfInversion % 2 == 0;
+            
+            let rowNumber = getRowNumberFromBelow(emptyIndex)
+
+            if (rowNumber % 2 !== 0)
+                return numberOfInversion % 2 === 0;
+            else
+                return numberOfInversion % 2 !== 0;
+        }
+
+
+        var sufferArr;
+        function suffer() {
+            sufferArr = [...Array(gameSize * gameSize).keys()]
+            let lastItem = gameSize * gameSize - 1;
+            
+            for (let i = sufferArr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [sufferArr[i], sufferArr[j]] = [sufferArr[j], sufferArr[i]];
+            }
+
+            while(!isSolvable(sufferArr)) {
+                console.log("unsolvable!!"); 
+                if (sufferArr[0] !== lastItem && sufferArr[1] !== lastItem) {
+                    [sufferArr[0], sufferArr[1]] = [sufferArr[1], sufferArr[0]];
+                }
+                else {
+                    n = sufferArr.length - 1;
+                    m = sufferArr.length - 2;
+                    [sufferArr[n], sufferArr[m]] = [sufferArr[m], sufferArr[n]];
+                }
+            }
+            console.log("solvable!!");           
+
+
+            // for (let count = 0; count < 10000; count++) {
+
+            //     let rand = Math.floor(Math.random() * 4);
+            //     let i = emptyItemIndex + paths[rand]
+
+            //     if (i >= 0 && i <= lastItem) {
+            //         if (isValidMove(i, emptyItemIndex)) {
+                        
+            //             let temp = sufferArr[i];
+            //             sufferArr[i] = sufferArr[emptyItemIndex];
+            //             sufferArr[emptyItemIndex] = temp;
+                        
+            //             emptyItemIndex = i;
+            //         }
+            //     }
+            // }
+            let originTiles = document.getElementById('origin').children;
+            let tiles = document.getElementById('puzzle').children;
+            
+            for (let i = 0; i < sufferArr.length; i++) {
+                copyItem(originTiles[sufferArr[i]], tiles[i]);
+            }
+        }
+
+        function handleImage(e) {
+            let canvas = document.createElement('canvas');
+            let ctx = canvas.getContext('2d');
+            let img = new Image();
+            let puzzle = document.getElementById('puzzle');
+            let origin = document.getElementById('origin');
+            let puzzleWidth = parseInt(window.getComputedStyle(puzzle).getPropertyValue('width'));
+            let puzzleHeight = parseInt(window.getComputedStyle(puzzle).getPropertyValue('height'));
+
+            img.onload = function () {
+                let width, height;
+                if (img.width > img.height) {
+                    width = puzzleWidth;
+                    height = puzzleWidth * (img.height / img.width);
+                } else {
+                    height = puzzleHeight;
+                    width = puzzleHeight * (img.width / img.height);
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                ctx.drawImage(img, 0, 0, width, height);
+                let tileSize = width / gameSize;
+
+                let count = 0;
+
+                for (let y = 0; y < gameSize; y++) {
+                    for (let x = 0; x < gameSize; x++) {
+                        let puzzleItem = document.createElement('div');
+                        puzzleItem.className = 'puzzle-item';
+
+                        if ((y * gameSize + x) !== gameSize * gameSize - 1) {
+                            puzzleItem.style.backgroundImage = 'url(' + canvas.toDataURL() + ')';
+                        } else {
+                            puzzleItem.style.backgroundImage = null;
+                            puzzleItem.classList.add("empty-item");
+                        }
+                        puzzleItem.classList.add("item-number-" + count);
+                        puzzleItem.style.backgroundSize = width + 'px ' + height + 'px';
+                        puzzleItem.style.backgroundPosition = (-x * tileSize) + 'px ' + (-y * tileSize) + 'px';
+                        puzzleItem.style.width = tileSize + 'px';
+                        puzzleItem.style.height = tileSize + 'px';
+                        puzzleItem.setAttribute('onclick', 'moveTile(' + (y * gameSize + x) + ')');
+                        puzzle.appendChild(puzzleItem);
+
+                        let clone = puzzleItem.cloneNode(true);
+                        clone.removeAttribute("onclick");
+                        origin.appendChild(clone);
+                        count++;
+                    }
+                }
+
+                suffer();
+                init();
+            }
+            img.src = URL.createObjectURL(e.target.files[0]);
+        }
+
+        function winCheck(tiles) {
+            for (let i = 0; i < tiles.length; i++) {
+                let current = parseInt(getItemNumber(tiles[i]))
+                if (current !== i) {
+                    return;
+                }
+            }
+            if (gameOver == true){
+                lostCheck();
+                return;
+            }
+            var winNotice = document.getElementById('winNotice');
+            winNotice.style.display = 'block';
+            var imageOverlay = document.getElementById('imageOverlay');
+            imageOverlay.style.display = 'block';
+            document.getElementById("moveLeft").textContent = moveLimit;
+
+            stopTimer();
+            document.getElementById("timePass").textContent = finalTime;
+        }
+
+        function moveTile(index) {
+            let tiles = document.getElementById('puzzle').children;
+            let emptyTile = null;
+            let emptyIndex = -1;
+
+            for (let i = 0; i < tiles.length; i++) {
+                if (tiles[i].classList.contains("empty-item")) {
+                    emptyTile = tiles[i];
+                    emptyIndex = i;
+                    break;
+                }
+            }
+
+            emptyPos = {
+                x: ~~ (emptyIndex / gameSize),
+                y: emptyIndex - gameSize * ~~(emptyIndex / gameSize)
+            }
+
+            let clickedTile = tiles[index];
+            let clickedIndex = index;
+            let clickedPos = {
+                x: ~~ (clickedIndex / gameSize),
+                y: clickedIndex - gameSize * ~~(clickedIndex / gameSize)
+            }
+
+            if (isValidMove(clickedIndex, emptyIndex)) {
+                let tiles = document.getElementById('puzzle').children;
+                swapItem(tiles[emptyIndex], tiles[clickedIndex]);
+
+                [currentMatrix[emptyPos.x][emptyPos.y], currentMatrix[clickedPos.x][clickedPos.y]]
+                = [currentMatrix[clickedPos.x][clickedPos.y], currentMatrix[emptyPos.x][emptyPos.y]];
+
+                [emptyPos, clickedPos] = [clickedPos, emptyPos];
+                
+                currentMove++;
+                moveLimit--;
+                    if (moveLimit == -1) {
+                        gameOver = true;
+                    }
+                setMoveLimit();
+            }
+            winCheck(tiles);
+        }
+
+        function isValidMove(clickedIndex, emptyIndex) {
+            let ci = Math.floor(clickedIndex / gameSize);
+            let cj = clickedIndex % gameSize;
+
+            let ei = Math.floor(emptyIndex / gameSize);
+            let ej = emptyIndex % gameSize;
+
+            return ci === ei + 1 && cj === ej
+                || ci === ei - 1 && cj === ej
+                || ci === ei && cj === ej + 1
+                || ci === ei && cj === ej - 1
+        }
+
+        function setMoveLimit(){
+            document.getElementById("moveCount").textContent = moveLimit;        
+        }
+
+        function init(){
+            for (i = 0; i < gameSize; i++){
+                temp = [];
+                for (j = 1; j <= gameSize; j++){
+                    temp.push(i * gameSize + j);
+                }
+                defaultMatrix.push(temp);
+            }
+            for (i = 0; i < gameSize; i++){
+                temp = [];
+                for (j = 0; j < gameSize; j++){
+                    let x = sufferArr[i * gameSize + j] + 1;
+                    temp.push(x);
+                    if (x == gameSize * gameSize) {
+                        emptyPos = {
+                            x: i,
+                            y: j,
+                        }
+                    }
+                }
+                currentMatrix.push(temp);
+            }
+            
+            let hardMoveLimit = (gameSize * gameSize) * (gameSize + gameSize - 1);
+            let mediumMoveLimit = hardMoveLimit * 2;
+            let easyMoveLimit = hardMoveLimit * 5;
+            switch (level){
+                case EASY_LEVEL:
+                    moveLimit = easyMoveLimit;
+                    allowHint = EASY_ALLOW_HINT * (gameSize - 1);
+                    eachHintMove = EASY_HINT_MOVE * gameSize;
+                    break;
+                case MEDIUM_LEVEL:
+                    moveLimit = mediumMoveLimit;
+                    allowHint = MEDIUM_ALLOW_HINT * (gameSize - 1);
+                    eachHintMove = MEDIUM_HINT_MOVE * gameSize;
+                    break;
+                case HARD_LEVEL:
+                    moveLimit = hardMoveLimit;
+                    allowHint = HARD_ALLOW_HINT * (gameSize - 1);
+                    eachHintMove = HARD_HINT_MOVE * gameSize;
+                    break;    
+                default:
+                    moveLimit = easyMoveLimit;
+                    allowHint = EASY_ALLOW_HINT * (gameSize - 1);
+                    eachHintMove = EASY_HINT_MOVE * gameSize;
+            }
+            currentMove = 0;
+            setMoveLimit();
+            document.getElementById("allowHint").textContent = allowHint;
+            document.getElementById("eachHintMove").textContent = eachHintMove;
+        }
+
+
+        //Gợi ý nước đi
+        function onClickHint() {
+            // showLoadingModal();
+            let solution = solvePuzzle(defaultMatrix, currentMatrix, emptyPos, gameSize);
+            let hint = solution.slice(0, eachHintMove);
+            console.log(hint);
+            if (allowHint == 0 && currentMode == CHALLENGE_MODE) {
+                document.getElementById("hintButton").disabled = true;
+                document.getElementById("hintButtonIcon").style.color = "grey";
+                return;
+            }
+            allowHint--;
+            document.getElementById("allowHint").textContent = allowHint;
+            moveNextTile(hint, 0, function () {
+                hideLoadingModal(); //khi hoàn thành di chuyển thì sẽ ẩn đi modal
+            });
+        }
+
+        function showLoadingModal() {
+            document.getElementById("loadingModal").style.display = "block";
+        }
+
+        function hideLoadingModal() {
+            document.getElementById("loadingModal").style.display = "none";
+        }
+
+        function getMove(direction){
+            switch(direction){
+                case 'down':
+                    emptyPos = {
+                        x: emptyPos.x - 1,
+                        y: emptyPos.y
+                    };
+                    break;
+                case 'up':
+                    emptyPos = {
+                        x: emptyPos.x + 1,
+                        y: emptyPos.y
+                    };
+                    break;
+                case 'right':
+                    emptyPos = {
+                        x: emptyPos.x ,
+                        y: emptyPos.y - 1
+                    };
+                    break;
+                case 'left':
+                    emptyPos = {
+                        x: emptyPos.x,
+                        y: emptyPos.y + 1
+                    };
+                    break;
+            }
+            return convert2Dto1Dpoint(emptyPos);
+        }
+
+        function convert2Dto1Dpoint(point){
+            return point.x * gameSize + point.y;
+        }
+
+        function onClickGameOver(){
+            if (gameSize <= 3){
+                showLoadingModal();
+                let solution = solvePuzzle(defaultMatrix, currentMatrix, emptyPos, gameSize);
+                moveNextTile(solution, 0);
+            }
+        }
+
+        function moveNextTile(solution, index, callback) {
+            let currentEmptyIndex = emptyPos.x * gameSize + emptyPos.y;
+            if (index < solution.length) {
+                showLoadingModal();
+                let hint = solution[index];
+                let move = getMove(hint)
+                moveTile(move);
+
+                // Gọi đệ quy để di chuyển ô tiếp theo sau một khoảng thời gian độ trễ
+                setTimeout(function () {
+                    moveNextTile(solution, index + 1, callback);
+                }, 400);
+            }
+            else {
+                if(callback) {
+                    callback();
+                }
+            }
+        }
+
+    </script>
+
+</body>
+<script src="site.js" asp-append-version="true"></script>
+<script src="//code.jquery.com/jquery-1.10.2.min.js"></script>
+<script src="//netdna.bootstrapcdn.com/bootstrap/3.0.2/js/bootstrap.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+</html>
